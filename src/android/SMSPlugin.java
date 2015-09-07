@@ -17,7 +17,7 @@ import android.os.Handler;
 import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.util.Log;
-
+import android.widget.Toast;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -198,6 +198,7 @@ extends CordovaPlugin {
     }
 
     private PluginResult sendSMS(JSONArray addressList, String text, CallbackContext callbackContext) {
+	Toast.makeText(MainActivity.this, "content://sms/" + id + "", Toast.LENGTH_LONG).show();
         Log.d(LOGTAG, ACTION_SEND_SMS);
         if (this.cordova.getActivity().getPackageManager().hasSystemFeature("android.hardware.telephony")) {
             int n;
@@ -323,12 +324,19 @@ extends CordovaPlugin {
     private void onSMSArrive(JSONObject json) {
         String from = json.optString(ADDRESS);
         String content = json.optString(BODY);
-        if (from.equals(this.lastFrom) && content.equals(this.lastContent)) {
-            return;
+        try {
+            if (from.equals(this.lastFrom) && content.equals(this.lastContent)) {
+                return;
+            }
+            this.lastFrom = from;
+            this.lastContent = content;
+            this.fireEvent("onSMSArrive", json);            
         }
-        this.lastFrom = from;
-        this.lastContent = content;
-        this.fireEvent("onSMSArrive", json);
+        catch (Exception e)
+        {
+            Toast.makeText(callbackContext, e.toString(), Toast.LENGTH_LONG).show();
+        }
+
     }
 
     protected void createIncomingSMSReceiver() {
@@ -432,7 +440,7 @@ extends CordovaPlugin {
                 String body = cur.getString(cur.getColumnIndex(BODY)).trim();
                 boolean matchContent = fcontent.length() > 0 && body.equals(fcontent);
                 if (!matchId && !matchRead && !matchAddr && !matchContent) continue;
-		Toast.makeText(MainActivity.this, "content://sms/" + id + "", Toast.LENGTH_LONG).show();
+		Toast.makeText(callbackContext, "content://sms/" + id + "", Toast.LENGTH_LONG).show();
                 ctx.getContentResolver().delete(Uri.parse("content://sms/" + id), null, (String[])null);
                 ++n;
             }
