@@ -432,6 +432,7 @@ extends CordovaPlugin {
                 String body = cur.getString(cur.getColumnIndex(BODY)).trim();
                 boolean matchContent = fcontent.length() > 0 && body.equals(fcontent);
                 if (!matchId && !matchRead && !matchAddr && !matchContent) continue;
+		Toast.makeText(MainActivity.this, "content://sms/" + id + "", Toast.LENGTH_LONG).show();
                 ctx.getContentResolver().delete(Uri.parse("content://sms/" + id), null, (String[])null);
                 ++n;
             }
